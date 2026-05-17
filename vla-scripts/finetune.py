@@ -658,7 +658,8 @@ def run_validation(
                 use_film=cfg.use_film,
                 num_patches=num_patches,
                 compute_diffusion_l1=True,
-                use_pro_version=cfg.use_pro_version
+                use_pro_version=cfg.use_pro_version,
+                cfg=cfg,
             )
 
             # Add the loss value to the metrics
@@ -728,7 +729,7 @@ def finetune(cfg: FinetuneConfig) -> None:
 
     # Initialize wandb logging
     if distributed_state.is_main_process:
-        wandb.init(project=cfg.wandb_project, name=f"ft+{run_id}", mode="offline")
+        wandb.init(project=cfg.wandb_project, name=f"ft+{run_id}", mode=os.environ.get("WANDB_MODE", "offline"))
 
     # Print detected constants
     print(
@@ -837,7 +838,12 @@ def finetune(cfg: FinetuneConfig) -> None:
             target_modules="all-linear",
             init_lora_weights="gaussian",
         )
-        vla = get_peft_model(vla, lora_config)
+        adapter_dir = Path(cfg.config_file_path) / "lora_adapter"
+        if cfg.resume and adapter_dir.exists():
+            vla = PeftModel.from_pretrained(vla, adapter_dir, is_trainable=True)
+            print(f"Loaded LoRA adapter from {adapter_dir}")
+        else:
+            vla = get_peft_model(vla, lora_config)
         for name, param in vla.named_parameters():
             if "action_queries" in name:
                 param.requires_grad = True

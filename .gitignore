@@ -152,3 +152,11 @@ data/
 rollouts/
 wandb/
 outputs/
+logs/
+eval_logs/
+evaluation_results/
+
+# Local external dependencies and downloaded checkpoints
+calvin/
+pretrained_models/prism-qwen25-extra-dinosiglip-224px-0_5b/
+pretrained_models/configs/*.back.*

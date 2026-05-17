@@ -286,7 +286,8 @@ class DualSystemCalvinEvaluation(CalvinBaseModel):
         # proprio_state = obs['robot_obs'][-8:]
         
         proprio_state = np.concatenate([obs['robot_obs'][:7], obs['robot_obs'][-1:]])  # EE position (3), EE orientation in euler angles (3), gripper width (1), joint positions (7), gripper action (1)
-        proprio_norm_stats = self.OFT.norm_stats['calvin_abc_rlds']['proprio']
+        calvin_norm_key = "calvin_abc_rlds" if "calvin_abc_rlds" in self.OFT.norm_stats else "calvin_abc"
+        proprio_norm_stats = self.OFT.norm_stats[calvin_norm_key]['proprio']
         # proprio_norm_stats = self.OFT.norm_stats['calvin']['proprio']
 
         obs["state"] = normalize_proprio(proprio_state, proprio_norm_stats)
@@ -297,7 +298,7 @@ class DualSystemCalvinEvaluation(CalvinBaseModel):
         with torch.no_grad(): 
             action, _ = self.OFT.predict_action(
                 **inputs,
-                unnorm_key="calvin_abc_rlds",
+                unnorm_key=calvin_norm_key,
                 # unnorm_key="calvin",
                 do_sample=False,
                 proprio=proprio_state,
